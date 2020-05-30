@@ -901,6 +901,7 @@ void OcdFileImport::importTemplate(const QString& param_string)
 	double scale_y = 1.0;
 	int dimming = 0;
 	bool visible = false;
+	bool explicit_positioning = false;
 	
 	while (i >= 0)
 	{
@@ -915,11 +916,13 @@ void OcdFileImport::importTemplate(const QString& param_string)
 			// empty item
 			break;
 		case 'x':
+			explicit_positioning = true;
 			value = param_value.toDouble(&ok);
 			if (ok)
 				templ->setTemplateX(qRound64(value*1000*scale_factor));
 			break;
 		case 'y':
+			explicit_positioning = true;
 			value = param_value.toDouble(&ok);
 			if (ok)
 				templ->setTemplateY(-qRound64(value*1000*scale_factor));
@@ -927,16 +930,19 @@ void OcdFileImport::importTemplate(const QString& param_string)
 		case 'a':
 		case 'b':
 			// TODO: use the distinct angles correctly, not just the average
+			explicit_positioning = true;
 			rotation += param_value.toDouble(&ok);
 			if (ok)
 				++num_rotation_params;
 			break;
 		case 'u':
+			explicit_positioning = true;
 			value = param_value.toDouble(&ok);
 			if (ok && qAbs(value) >= 0.0000000001)
 				scale_x = value;
 			break;
 		case 'v':
+			explicit_positioning = true;
 			value = param_value.toDouble(&ok);
 			if (ok && qAbs(value) >= 0.0000000001)
 				scale_y = value;
@@ -953,11 +959,18 @@ void OcdFileImport::importTemplate(const QString& param_string)
 		i = next_i;
 	}
 	
-	if (num_rotation_params)
-		templ->setTemplateRotation(Georeferencing::degToRad(rotation / num_rotation_params));
-	
-	templ->setTemplateScaleX(scale_x * scale_factor);
-	templ->setTemplateScaleY(scale_y * scale_factor);
+	if (explicit_positioning)
+	{
+		if (num_rotation_params)
+			templ->setTemplateRotation(Georeferencing::degToRad(rotation / num_rotation_params));
+		
+		templ->setTemplateScaleX(scale_x * scale_factor);
+		templ->setTemplateScaleY(scale_y * scale_factor);
+	}
+	else
+	{
+		templ->setGeoreferenced(true);
+	}
 	
 	int template_pos = map->getFirstFrontTemplate();
 	map->addTemplate(templ, 0);
