@@ -109,6 +109,13 @@ bool TemplateMap::loadTemplateFileImpl(bool configuring)
 		}
 		
 		template_map = std::move(new_template_map);
+		
+		if (is_georeferenced)
+		{
+			calculateTransformation();
+			templateMap()->applyOnAllObjects(transform.makeObjectTransform());
+			templateMap()->setGeoreferencing(map->getGeoreferencing());
+		}
 	}
 	else if (configuring)
 	{
