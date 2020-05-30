@@ -60,6 +60,9 @@ public:
 	const char* getTemplateType() const override;
 	
 	
+	void setGeoreferenced(bool value);
+	
+	
 	std::unique_ptr<Template> makeActualTemplate() const;
 	
 	
